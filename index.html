@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewJeans音乐专辑库 | NewJeans Album Library</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF69B4',     // 粉色主题
+                        secondary: '#0F0F0F',   // 深色背景
+                        accent: '#1A1A1A',      // 卡片/导航背景
+                        light: '#FFFFFF',       // 亮色文本
+                        'gray-custom': '#B3B3B3'// 灰色文本
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            }
+            .backdrop-blur-sm {
+                backdrop-filter: blur(4px);
+            }
+            .album-card:hover {
+                transform: translateY(-8px);
+            }
+            .album-card:hover img {
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+                transform: scale(1.05);
+            }
+        }
+    </style>
+</head>
+<body class="bg-secondary text-light min-h-screen flex flex-col">
+    <!-- 导航栏 -->
+    <nav id="main-nav" class="bg-accent/90 backdrop-blur-sm fixed w-full z-50 transition-all duration-300">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-2">
+                <!-- 已将图标从fa-music更改为fa-headphones -->
+                <i class="fa fa-headphones text-primary text-2xl"></i>
+                <span class="font-bold text-xl">NewJeans专辑库</span>
+            </a>
+
+            <div class="flex items-center space-x-4">
+                <div id="auth-buttons" class="flex items-center space-x-4">
+                    <button id="login-btn" class="px-4 py-2 rounded-full bg-transparent border border-light/30 hover:border-light transition-colors">登录</button>
+                    <button id="register-btn" class="px-4 py-2 rounded-full bg-primary text-secondary font-semibold hover:bg-primary/90 transition-colors">注册</button>
+                </div>
+
+                <div id="user-menu" class="flex items-center space-x-4 hidden">
+                    <span id="username-display" class="hidden md:inline-block"></span>
+                    <button id="logout-btn" class="px-4 py-2 rounded-full bg-transparent border border-light/30 hover:border-light transition-colors">退出登录</button>
+                </div>
+                
+                <!-- 收藏按钮 -->
+                <div id="favorites-section" class="relative">
+                    <button id="favorites-btn" class="relative px-4 py-2 rounded-full bg-transparent border border-light/30 hover:border-light transition-colors">
+                        <i class="fa fa-heart"></i>
+                        <span id="favorites-count" class="absolute -top-2 -right-2 bg-primary text-secondary text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </button>
+                </div>
+                
+                <!-- 购物车按钮 -->
+                <div id="cart-section" class="relative">
+                    <button id="cart-btn" class="relative px-4 py-2 rounded-full bg-transparent border border-light/30 hover:border-light transition-colors">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-primary text-secondary text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow pt-24 pb-16">
+        <!-- 英雄区域 -->
+        <section class="relative h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-b from-accent/50 to-secondary z-10"></div>
+            <!-- 已将背景图更改为您提供的图片，并调整显示位置为上半部分 -->
+            <img src="https://i0.hdslb.com/bfs/article/c9bb379a9444d26ced5efd9e0eba2e61286431045.jpg@1192w.avif" alt="NewJeans背景" class="absolute w-full h-full object-cover object-top">
+            <div class="container mx-auto px-4 z-20 text-center">
+                <h1 class="text-[clamp(2.5rem,8vw,5rem)] font-bold mb-4 text-shadow animate-[fadeIn_1s_ease-in-out]">探索NewJeans的音乐世界</h1>
+                <p class="text-[clamp(1rem,2vw,1.25rem)] text-gray-custom max-w-2xl mx-auto mb-8 animate-[fadeIn_1.2s_ease-in-out]">无需登录，直接浏览NewJeans的所有音乐专辑，发现你喜爱的歌曲。</p>
+                <button id="explore-btn" class="px-8 py-3 rounded-full bg-primary text-secondary font-bold text-lg hover:bg-primary/90 transform hover:scale-105 transition-all duration-300 shadow-lg animate-[fadeIn_1.4s_ease-in-out] opacity-0" style="animation-fill-mode: forwards; animation-delay: 0.4s;">
+                    立即探索
+                </button>
+            </div>
+        </section>
+
+        <!-- 专辑列表区域 (默认隐藏，点击探索后显示) -->
+        <section id="albums-section" class="py-12 hidden">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold">NewJeans专辑</h2>
+                </div>
+
+                <div id="albums-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                    <!-- 专辑卡片将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-accent py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <!-- 已将图标从fa-music更改为fa-headphones -->
+                        <i class="fa fa-headphones text-primary text-2xl"></i>
+                        <span class="font-bold text-xl">NewJeans专辑库</span>
+                    </div>
+                    <p class="text-gray-custom mt-2">© 2025 NewJeans专辑库. 保留所有权利.</p>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-custom hover:text-primary transition-colors"><i class="fa fa-facebook"></i></a>
+                    <a href="#" class="text-gray-custom hover:text-primary transition-colors"><i class="fa fa-twitter"></i></a>
+                    <a href="#" class="text-gray-custom hover:text-primary transition-colors"><i class="fa fa-instagram"></i></a>
+                    <a href="#" class="text-gray-custom hover:text-primary transition-colors"><i class="fa fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 登录模态框 -->
+    <div id="login-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
+        <div class="bg-accent rounded-lg shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all scale-95 opacity-0" id="login-modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">用户登录</h2>
+                    <button class="close-modal text-gray-custom hover:text-light">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="login-email" class="block text-gray-custom mb-2">邮箱</label>
+                        <input type="email" id="login-email" class="w-full bg-secondary border border-gray-custom/30 rounded-md px-4 py-2 focus:outline-none focus:border-primary" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="login-password" class="block text-gray-custom mb-2">密码</label>
+                        <input type="password" id="login-password" class="w-full bg-secondary border border-gray-custom/30 rounded-md px-4 py-2 focus:outline-none focus:border-primary" placeholder="请输入密码" required>
+                    </div>
+                    <p id="login-error" class="text-red-500 mb-4 hidden">邮箱或密码错误</p>
+                    <button type="submit" class="w-full bg-primary text-secondary font-bold py-3 rounded-md hover:bg-primary/90 transition-colors">登录</button>
+                </form>
+                <div class="mt-6 text-center text-gray-custom">
+                    <p>还没有账号? <a href="#" id="switch-to-register" class="text-primary hover:underline">立即注册</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="register-modal" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center hidden">
+        <div class="bg-accent rounded-lg shadow-2xl w-full max-w-md mx-4 overflow-hidden transform transition-all scale-95 opacity-0" id="register-modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">用户注册</h2>
+                    <button class="close-modal text-gray-custom hover:text-light">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                <form id="register-form">
+                    <div class="mb-4">
+                        <label for="register-username" class="block text-gray-custom mb-2">用户名</label>
+                        <input type="text" id="register-username" class="w-full bg-secondary border border-gray-custom/30 rounded-md px-4 py-2 focus:outline-none focus:border-primary" placeholder="请输入用户名" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="register-email" class="block text-gray-custom mb-2">邮箱</label>
+                        <input type="email" id="register-email" class="w-full bg-secondary border border-gray-custom/30 rounded-md px-4 py-2 focus:outline-none focus:border-primary" placeholder="请输入邮箱" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="register-password" class="block text-gray-custom mb-2">密码</label>
+                        <input type="password" id="register-password" class="w-full bg-secondary border border-gray-custom/30 rounded-md px-4 py-2 focus:outline-none focus:border-primary" placeholder="请输入密码 (至少6位)" required minlength="6">
+                    </div>
+                    <p id="register-error" class="text-red-500 mb-4 hidden">该邮箱已被注册</p>
+                    <button type="submit" class="w-full bg-primary text-secondary font-bold py-3 rounded-md hover:bg-primary/90 transition-colors">注册</button>
+                </form>
+                <div class="mt-6 text-center text-gray-custom">
+                    <p>已有账号? <a href="#" id="switch-to-login" class="text-primary hover:underline">返回登录</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 专辑详情模态框 - 修改了专辑封面显示方式和关闭按钮位置 -->
+    <div id="album-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-accent rounded-lg shadow-2xl w-full max-w-4xl mx-4 overflow-hidden transform transition-all scale-95 opacity-0 relative" id="album-modal-content">
+            <!-- 关闭按钮移动到模态框右上角 -->
+            <button id="close-album-modal" class="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center transition-colors z-10">
+                <i class="fa fa-times"></i>
+            </button>
+            
+            <div class="grid md:grid-cols-2">
+                <!-- 修改专辑封面容器为正方形并确保完整显示 -->
+                <div class="relative aspect-square bg-secondary flex items-center justify-center p-8">
+                    <img id="modal-album-cover" src="" alt="专辑封面" class="w-full h-full object-contain">
+                </div>
+                <div class="p-6 md:p-8">
+                    <span id="modal-album-year" class="text-sm bg-primary/20 text-primary px-3 py-1 rounded-full">2023</span>
+                    <h2 id="modal-album-title" class="text-3xl font-bold mt-4 mb-2">专辑名称</h2>
+                    <p id="modal-album-artist" class="text-xl text-gray-custom mb-6">NewJeans</p>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-3 flex items-center">
+                            <i class="fa fa-list-music mr-2 text-primary"></i>
+                            曲目列表
+                        </h3>
+                        <ul id="modal-album-tracks" class="space-y-2 max-h-60 overflow-y-auto pr-2">
+                            <!-- 曲目将通过JavaScript动态生成 -->
+                        </ul>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <button class="flex items-center space-x-2 px-4 py-2 bg-primary text-secondary font-semibold rounded-full hover:bg-primary/90 transition-colors">
+                            <i class="fa fa-play"></i>
+                            <span>播放全部</span>
+                        </button>
+                        <!-- 收藏按钮 -->
+                        <button id="favorite-btn" class="flex items-center space-x-2 px-4 py-2 border border-light/30 rounded-full hover:border-light transition-colors">
+                            <i class="fa fa-heart-o"></i>
+                            <span>收藏</span>
+                        </button>
+                        <!-- 添加到购物车按钮 -->
+                        <button id="add-to-cart-btn" class="flex items-center space-x-2 px-4 py-2 border border-light/30 rounded-full hover:border-light transition-colors">
+                            <i class="fa fa-cart-plus"></i>
+                            <span>添加到购物车</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 购物车模态框 -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-accent rounded-lg shadow-2xl w-full max-w-4xl mx-4 overflow-hidden transform transition-all scale-95 opacity-0" id="cart-modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">购物车</h2>
+                    <button id="close-cart-modal" class="text-gray-custom hover:text-light">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="cart-items-container" class="mb-6 max-h-96 overflow-y-auto">
+                    <!-- 购物车项目将在这里动态生成 -->
+                    <p id="empty-cart-message" class="text-center text-gray-custom py-8">您的购物车是空的</p>
+                </div>
+                
+                <div class="border-t border-gray-custom/30 pt-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-lg font-semibold">总计:</span>
+                        <span id="cart-total-price" class="text-xl font-bold text-primary">¥0.00</span>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button id="clear-cart-btn" class="flex-1 px-4 py-2 border border-light/30 rounded-md hover:border-light transition-colors">
+                            清空购物车
+                        </button>
+                        <button id="checkout-btn" class="flex-1 px-4 py-2 bg-primary text-secondary font-semibold rounded-md hover:bg-primary/90 transition-colors">
+                            结算
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 收藏模态框 -->
+    <div id="favorites-modal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden">
+        <div class="bg-accent rounded-lg shadow-2xl w-full max-w-4xl mx-4 overflow-hidden transform transition-all scale-95 opacity-0" id="favorites-modal-content">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">我的收藏</h2>
+                    <button id="close-favorites-modal" class="text-gray-custom hover:text-light">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="favorites-items-container" class="mb-6 max-h-96 overflow-y-auto">
+                    <!-- 收藏项目将在这里动态生成 -->
+                    <p id="empty-favorites-message" class="text-center text-gray-custom py-8">您还没有收藏任何专辑</p>
+                </div>
+                
+                <div class="border-t border-gray-custom/30 pt-4">
+                    <div class="flex space-x-4">
+                        <button id="clear-favorites-btn" class="flex-1 px-4 py-2 border border-light/30 rounded-md hover:border-light transition-colors">
+                            清空收藏
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NewJeans专辑数据 - 已更新所有专辑封面并删除了GOD专辑
+        const albumsData = [
+            {
+                id: 1,
+                title: "New Jeans",
+                artist: "NewJeans",
+                year: 2022,
+                price: 89.99,
+                // 已将New Jeans专辑封面更改为您提供的图片
+                cover: "https://is1-ssl.mzstatic.com/image/thumb/Video112/v4/e0/62/ab/e062abb2-166a-6143-b900-f21edf54e739/Job5834c79a-6bf2-46ea-96ac-fcdbcd6e3e6d-134465492-PreviewImage_preview_image_nonvideo_sdr-Time1658870263192.png/592x592bb.webp",
+                tracks: [
+                    "Attention",
+                    "Hype Boy",
+                    "Cookie",
+                    "Hurt"
+                ]
+            },
+            {
+                id: 2,
+                title: "OMG",
+                artist: "NewJeans",
+                year: 2023,
+                price: 79.99,
+                // 已更新OMG专辑封面并删除两首remix曲目
+                cover: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/48/96/08/4896085e-b550-cb0a-3e5b-1f203521cb82/196922265464_Cover.jpg/592x592bb.webp",
+                tracks: [
+                    "OMG",
+                    "Ditto"
+                ]
+            },
+            {
+                id: 3,
+                title: "Get Up",
+                artist: "NewJeans",
+                year: 2023,
+                price: 99.99,
+                // 已更新Get Up专辑封面
+                cover: "https://is1-ssl.mzstatic.com/image/thumb/Video116/v4/c5/c7/57/c5c75789-ca23-8348-bb7d-97bb475ab39d/Jobb5f50d1b-284d-43a5-8416-247f17434478-162171499-PreviewImage_Preview_Image_Intermediate_nonvideo_sdr_313717993_1671887493-Time1706595447928.png/592x592bb.webp",
+                tracks: [
+                    "New Jeans",
+                    "Super Shy",
+                    "ETA",
+                    "Cool With You",
+                    "Get Up",
+                    "ASAP"
+                ]
+            },
+            {
+                id: 4,
+                title: "How Sweet",
+                artist: "NewJeans",
+                year: 2024,
+                price: 89.99,
+                // 已更新How Sweet专辑封面
+                cover: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/bf/68/ca/bf68ca64-4acd-543f-bc78-455f11f06105/196922889738_Cover.jpg/592x592bb.webp",
+                tracks: [
+                    "How Sweet",
+                    "Bubble Gum",
+                    "How Sweet (Instrumental)",
+                    "Bubble Gum (Instrumental)"
+                ]
+            },
+            {
+                id: 5,
+                title: "Supernatural",
+                artist: "NewJeans",
+                year: 2024,
+                price: 79.99,
+                // 已更新Supernatural专辑封面
+                cover: "https://is1-ssl.mzstatic.com/image/thumb/Video221/v4/af/5a/14/af5a148c-6490-169f-52ba-998d7ec20aac/Job236bef89-77c2-4e69-81a6-3974d587277f-169528994-PreviewImage_Preview_Image_Intermediate_nonvideo_sdr_329971122_1794972424-Time1717646239330.png/592x592bb.webp",
+                tracks: [
+                    "Supernatural",
+                    "Right Now",
+                    "Supernatural (Instrumental)",
+                    "Right Now (Instrumental)"
+                ]
+            }
+            // 已删除GOD专辑
+        ];
+
+        // DOM 元素
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const exploreBtn = document.getElementById('explore-btn');
+        const albumsSection = document.getElementById('albums-section');
+        const albumsGrid = document.getElementById('albums-grid');
+        const authButtons = document.getElementById('auth-buttons');
+        const userMenu = document.getElementById('user-menu');
+        const usernameDisplay = document.getElementById('username-display');
+        const cartBtn = document.getElementById('cart-btn');
+        const cartCount = document.getElementById('cart-count');
+        const favoritesBtn = document.getElementById('favorites-btn');
+        const favoritesCount = document.getElementById('favorites-count');
+        const addToCartBtn = document.getElementById('add-to-cart-btn');
+        const favoriteBtn = document.getElementById('favorite-btn');
+
+        const loginModal = document.getElementById('login-modal');
+        const loginModalContent = document.getElementById('login-modal-content');
+        const registerModal = document.getElementById('register-modal');
+        const registerModalContent = document.getElementById('register-modal-content');
+        const albumModal = document.getElementById('album-modal');
+        const albumModalContent = document.getElementById('album-modal-content');
+        const cartModal = document.getElementById('cart-modal');
+        const cartModalContent = document.getElementById('cart-modal-content');
+        const favoritesModal = document.getElementById('favorites-modal');
+        const favoritesModalContent = document.getElementById('favorites-modal-content');
+
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const loginError = document.getElementById('login-error');
+        const registerError = document.getElementById('register-error');
+
+        const switchToRegister = document.getElementById('switch-to-register');
+        const switchToLogin = document.getElementById('switch-to-login');
+        const closeButtons = document.querySelectorAll('.close-modal');
+        const closeAlbumModal = document.getElementById('close-album-modal');
+        const closeCartModal = document.getElementById('close-cart-modal');
+        const closeFavoritesModal = document.getElementById('close-favorites-modal');
+        const clearCartBtn = document.getElementById('clear-cart-btn');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const clearFavoritesBtn = document.getElementById('clear-favorites-btn');
+
+        const cartItemsContainer = document.getElementById('cart-items-container');
+        const cartTotalPrice = document.getElementById('cart-total-price');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const favoritesItemsContainer = document.getElementById('favorites-items-container');
+        const emptyFavoritesMessage = document.getElementById('empty-favorites-message');
+
+        // 当前选中的专辑
+        let currentAlbum = null;
+
+        // 购物车数据
+        let cart = JSON.parse(localStorage.getItem('newjeansAlbumCart')) || [];
+
+        // 收藏数据
+        let favorites = JSON.parse(localStorage.getItem('newjeansAlbumFavorites')) || [];
+
+        // 更新购物车显示
+        function updateCartDisplay() {
+            // 更新购物车数量
+            cartCount.textContent = cart.length;
+            if (cart.length > 0) {
+                cartCount.classList.remove('hidden');
+            } else {
+                cartCount.classList.add('hidden');
+            }
+
+            // 更新购物车总价
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            cartTotalPrice.textContent = `¥${total.toFixed(2)}`;
+
+            // 保存到本地存储
+            localStorage.setItem('newjeansAlbumCart', JSON.stringify(cart));
+        }
+
+        // 更新收藏显示
+        function updateFavoritesDisplay() {
+            // 更新收藏数量
+            favoritesCount.textContent = favorites.length;
+            if (favorites.length > 0) {
+                favoritesCount.classList.remove('hidden');
+            } else {
+                favoritesCount.classList.add('hidden');
+            }
+
+            // 保存到本地存储
+            localStorage.setItem('newjeansAlbumFavorites', JSON.stringify(favorites));
+        }
+
+        // 渲染购物车项目
+        function renderCartItems() {
+            cartItemsContainer.innerHTML = '';
+            
+            if (cart.length === 0) {
+                emptyCartMessage.classList.remove('hidden');
+                return;
+            }
+            
+            emptyCartMessage.classList.add('hidden');
+            
+            cart.forEach((item, index) => {
+                const cartItem = document.createElement('div');
+                cartItem.className = 'flex items-center justify-between p-4 border-b border-gray-custom/20';
+                cartItem.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <img src="${item.cover}" alt="${item.title}" class="w-16 h-16 object-cover rounded-md">
+                        <div>
+                            <h3 class="font-semibold">${item.title}</h3>
+                            <p class="text-gray-custom">${item.artist}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-primary font-bold">¥${item.price.toFixed(2)}</span>
+                        <button class="remove-from-cart-btn text-red-500 hover:text-red-400" data-index="${index}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                cartItemsContainer.appendChild(cartItem);
+            });
+
+            // 添加删除按钮事件
+            document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.currentTarget.getAttribute('data-index'));
+                    removeFromCart(index);
+                });
+            });
+        }
+
+        // 渲染收藏项目
+        function renderFavoritesItems() {
+            favoritesItemsContainer.innerHTML = '';
+            
+            if (favorites.length === 0) {
+                emptyFavoritesMessage.classList.remove('hidden');
+                return;
+            }
+            
+            emptyFavoritesMessage.classList.add('hidden');
+            
+            favorites.forEach((item, index) => {
+                const favoriteItem = document.createElement('div');
+                favoriteItem.className = 'flex items-center justify-between p-4 border-b border-gray-custom/20';
+                favoriteItem.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <img src="${item.cover}" alt="${item.title}" class="w-16 h-16 object-cover rounded-md">
+                        <div>
+                            <h3 class="font-semibold">${item.title}</h3>
+                            <p class="text-gray-custom">${item.artist}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="view-favorite-btn px-4 py-2 bg-primary text-secondary font-semibold rounded-md hover:bg-primary/90 transition-colors" data-id="${item.id}">
+                            查看详情
+                        </button>
+                        <button class="remove-from-favorites-btn text-red-500 hover:text-red-400" data-index="${index}">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                favoritesItemsContainer.appendChild(favoriteItem);
+            });
+
+            // 添加查看详情按钮事件
+            document.querySelectorAll('.view-favorite-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const id = parseInt(e.currentTarget.getAttribute('data-id'));
+                    const album = albumsData.find(album => album.id === id);
+                    if (album) {
+                        closeModal(favoritesModal, favoritesModalContent);
+                        openAlbumModal(album);
+                    }
+                });
+            });
+
+            // 添加删除按钮事件
+            document.querySelectorAll('.remove-from-favorites-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const index = parseInt(e.currentTarget.getAttribute('data-index'));
+                    removeFromFavorites(index);
+                });
+            });
+        }
+
+        // 添加到购物车
+        function addToCart(album) {
+            cart.push({
+                id: album.id,
+                title: album.title,
+                artist: album.artist,
+                cover: album.cover,
+                price: album.price
+            });
+            
+            updateCartDisplay();
+            renderCartItems();
+            
+            // 显示添加成功提示
+            showNotification(`已添加 "${album.title}" 到购物车`);
+        }
+
+        // 添加到收藏
+        function addToFavorites(album) {
+            // 检查是否已经收藏
+            const alreadyFavorited = favorites.some(item => item.id === album.id);
+            
+            if (!alreadyFavorited) {
+                favorites.push({
+                    id: album.id,
+                    title: album.title,
+                    artist: album.artist,
+                    cover: album.cover,
+                    year: album.year
+                });
+                
+                updateFavoritesDisplay();
+                renderFavoritesItems();
+                
+                // 更新收藏按钮状态
+                updateFavoriteButtonState(true);
+                
+                // 显示添加成功提示
+                showNotification(`已收藏 "${album.title}"`);
+            } else {
+                showNotification(`"${album.title}" 已在收藏列表中`);
+            }
+        }
+
+        // 从购物车移除
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartDisplay();
+            renderCartItems();
+        }
+
+        // 从收藏移除
+        function removeFromFavorites(index) {
+            favorites.splice(index, 1);
+            updateFavoritesDisplay();
+            renderFavoritesItems();
+            
+            // 如果当前专辑是从收藏中移除的，更新按钮状态
+            if (currentAlbum && favorites.every(item => item.id !== currentAlbum.id)) {
+                updateFavoriteButtonState(false);
+            }
+        }
+
+        // 清空购物车
+        function clearCart() {
+            cart = [];
+            updateCartDisplay();
+            renderCartItems();
+        }
+
+        // 清空收藏
+        function clearFavorites() {
+            favorites = [];
+            updateFavoritesDisplay();
+            renderFavoritesItems();
+            
+            // 更新收藏按钮状态
+            if (currentAlbum) {
+                updateFavoriteButtonState(false);
+            }
+        }
+
+        // 更新收藏按钮状态
+        function updateFavoriteButtonState(isFavorited) {
+            if (isFavorited) {
+                favoriteBtn.innerHTML = '<i class="fa fa-heart text-red-500"></i><span>已收藏</span>';
+                favoriteBtn.classList.add('bg-red-500/20', 'border-red-500/50');
+                favoriteBtn.classList.remove('border-light/30');
+            } else {
+                favoriteBtn.innerHTML = '<i class="fa fa-heart-o"></i><span>收藏</span>';
+                favoriteBtn.classList.remove('bg-red-500/20', 'border-red-500/50');
+                favoriteBtn.classList.add('border-light/30');
+            }
+        }
+
+        // 显示通知
+        function showNotification(message) {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-24 right-4 bg-primary text-secondary px-6 py-3 rounded-md shadow-lg z-50 transform transition-all duration-300 translate-x-full';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // 显示通知
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 10);
+            
+            // 隐藏通知
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // 导航栏滚动效果
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('main-nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('py-2', 'shadow-md');
+                nav.classList.remove('py-3');
+            } else {
+                nav.classList.add('py-3');
+                nav.classList.remove('py-2', 'shadow-md');
+            }
+        });
+
+        // 模态框动画效果
+        function openModal(modal, modalContent) {
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modal, modalContent) {
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        // 打开登录模态框
+        loginBtn.addEventListener('click', () => {
+            openModal(loginModal, loginModalContent);
+        });
+
+        // 打开注册模态框
+        registerBtn.addEventListener('click', () => {
+            openModal(registerModal, registerModalContent);
+        });
+
+        // 关闭模态框
+        closeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                closeModal(loginModal, loginModalContent);
+                closeModal(registerModal, registerModalContent);
+                loginError.classList.add('hidden');
+                registerError.classList.add('hidden');
+                loginForm.reset();
+                registerForm.reset();
+            });
+        });
+
+        // 切换模态框
+        switchToRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeModal(loginModal, loginModalContent);
+            setTimeout(() => {
+                openModal(registerModal, registerModalContent);
+                loginError.classList.add('hidden');
+                loginForm.reset();
+            }, 300);
+        });
+
+        switchToLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            closeModal(registerModal, registerModalContent);
+            setTimeout(() => {
+                openModal(loginModal, loginModalContent);
+                registerError.classList.add('hidden');
+                registerForm.reset();
+            }, 300);
+        });
+
+        // 点击模态框外部关闭
+        [loginModal, registerModal, albumModal, cartModal, favoritesModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    if (modal === loginModal) closeModal(loginModal, loginModalContent);
+                    if (modal === registerModal) closeModal(registerModal, registerModalContent);
+                    if (modal === albumModal) closeModal(albumModal, albumModalContent);
+                    if (modal === cartModal) closeModal(cartModal, cartModalContent);
+                    if (modal === favoritesModal) closeModal(favoritesModal, favoritesModalContent);
+                }
+            });
+        });
+
+        // 检查用户是否已登录 (前端模拟)
+        function checkUserLoggedIn() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                authButtons.classList.add('hidden');
+                userMenu.classList.remove('hidden');
+                usernameDisplay.textContent = `欢迎, ${user.username}`;
+            } else {
+                authButtons.classList.remove('hidden');
+                userMenu.classList.add('hidden');
+            }
+        }
+
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', () => {
+            checkUserLoggedIn();
+            updateCartDisplay();
+            renderCartItems();
+            updateFavoritesDisplay();
+            renderFavoritesItems();
+        });
+
+        // 注册功能 (前端模拟)
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userExists = users.some(user => user.email === email);
+
+            if (userExists) {
+                registerError.classList.remove('hidden');
+                return;
+            }
+
+            const newUser = { id: Date.now(), username, email, password };
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+            closeModal(registerModal, registerModalContent);
+            checkUserLoggedIn();
+            alert('注册成功！');
+        });
+
+        // 登录功能 (前端模拟)
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(user => user.email === email && user.password === password);
+
+            if (user) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                closeModal(loginModal, loginModalContent);
+                checkUserLoggedIn();
+            } else {
+                loginError.classList.remove('hidden');
+            }
+        });
+
+        // 登出功能
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('currentUser');
+            checkUserLoggedIn();
+        });
+
+        // 探索按钮点击事件
+        exploreBtn.addEventListener('click', () => {
+            albumsSection.classList.remove('hidden');
+            albumsSection.scrollIntoView({ behavior: 'smooth' });
+            renderAlbums();
+        });
+
+        // 关闭专辑详情模态框
+        closeAlbumModal.addEventListener('click', () => {
+            closeModal(albumModal, albumModalContent);
+        });
+
+        // 关闭购物车模态框
+        closeCartModal.addEventListener('click', () => {
+            closeModal(cartModal, cartModalContent);
+        });
+
+        // 关闭收藏模态框
+        closeFavoritesModal.addEventListener('click', () => {
+            closeModal(favoritesModal, favoritesModalContent);
+        });
+
+        // 打开购物车模态框
+        cartBtn.addEventListener('click', () => {
+            openModal(cartModal, cartModalContent);
+        });
+
+        // 打开收藏模态框
+        favoritesBtn.addEventListener('click', () => {
+            openModal(favoritesModal, favoritesModalContent);
+        });
+
+        // 清空购物车
+        clearCartBtn.addEventListener('click', () => {
+            if (cart.length > 0) {
+                if (confirm('确定要清空购物车吗？')) {
+                    clearCart();
+                }
+            }
+        });
+
+        // 清空收藏
+        clearFavoritesBtn.addEventListener('click', () => {
+            if (favorites.length > 0) {
+                if (confirm('确定要清空收藏吗？')) {
+                    clearFavorites();
+                }
+            }
+        });
+
+        // 结算按钮
+        checkoutBtn.addEventListener('click', () => {
+            if (cart.length === 0) {
+                alert('购物车为空，无法结算');
+                return;
+            }
+            
+            alert(`结算成功！总金额：${cartTotalPrice.textContent}`);
+            clearCart();
+            closeModal(cartModal, cartModalContent);
+        });
+
+        // 渲染专辑列表
+        function renderAlbums() {
+            albumsGrid.innerHTML = '';
+
+            albumsData.forEach(album => {
+                const albumCard = document.createElement('div');
+                albumCard.className = 'album-card bg-accent rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:shadow-xl cursor-pointer';
+                albumCard.innerHTML = `
+                    <div class="relative pb-full overflow-hidden">
+                        <img src="${album.cover}" alt="${album.title}" class="absolute inset-0 w-full h-full object-cover transition-all duration-300">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="font-bold text-lg truncate">${album.title}</h3>
+                        <p class="text-gray-custom truncate">${album.artist}</p>
+                        <p class="text-sm text-gray-custom mt-1">${album.year}</p>
+                    </div>
+                `;
+
+                // 点击专辑卡片，打开详情模态框
+                albumCard.addEventListener('click', () => {
+                    openAlbumModal(album);
+                });
+
+                albumsGrid.appendChild(albumCard);
+            });
+        }
+
+        // 打开专辑详情模态框
+        function openAlbumModal(album) {
+            currentAlbum = album;
+            
+            document.getElementById('modal-album-cover').src = album.cover;
+            document.getElementById('modal-album-cover').alt = `${album.title} - ${album.artist}`;
+            document.getElementById('modal-album-title').textContent = album.title;
+            document.getElementById('modal-album-artist').textContent = album.artist;
+            document.getElementById('modal-album-year').textContent = album.year;
+
+            const tracksList = document.getElementById('modal-album-tracks');
+            tracksList.innerHTML = '';
+
+            album.tracks.forEach((track, index) => {
+                const trackItem = document.createElement('li');
+                trackItem.className = 'flex items-center justify-between p-2 hover:bg-secondary/50 rounded transition-colors';
+                trackItem.innerHTML = `
+                    <span class="flex items-center">
+                        <span class="text-gray-custom mr-3 w-5 text-right">${index + 1}</span>
+                        ${track}
+                    </span>
+                    <span class="text-gray-custom text-sm">${Math.floor(Math.random() * 3) + 2}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}</span>
+                `;
+                tracksList.appendChild(trackItem);
+            });
+
+            // 更新收藏按钮状态
+            const isFavorited = favorites.some(item => item.id === album.id);
+            updateFavoriteButtonState(isFavorited);
+
+            openModal(albumModal, albumModalContent);
+        }
+
+        // 添加到购物车按钮事件
+        addToCartBtn.addEventListener('click', () => {
+            if (currentAlbum) {
+                addToCart(currentAlbum);
+                closeModal(albumModal, albumModalContent);
+            }
+        });
+
+        // 收藏按钮事件
+        favoriteBtn.addEventListener('click', () => {
+            if (currentAlbum) {
+                const isFavorited = favorites.some(item => item.id === currentAlbum.id);
+                
+                if (isFavorited) {
+                    // 如果已经收藏，则移除
+                    const index = favorites.findIndex(item => item.id === currentAlbum.id);
+                    removeFromFavorites(index);
+                } else {
+                    // 如果没有收藏，则添加
+                    addToFavorites(currentAlbum);
+                }
+            }
+        });
+
+        // 添加动画关键帧
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
